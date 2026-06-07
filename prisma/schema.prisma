@@ -47,7 +47,7 @@ model Room {
 model Booking {
   id        String       @id @default(cuid())
   type      MovementType
-  nights    Int
+  nights    Int          @default(0)  // solo aplica para ENTRADA
   date      DateTime     @default(now())
   createdAt DateTime     @default(now())
 
