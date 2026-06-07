@@ -1,0 +1,59 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  ADMIN
+  USER
+}
+
+enum MovementType {
+  ENTRADA
+  SALIDA
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  image     String?
+  password  String
+  role      Role     @default(USER)
+  createdAt DateTime @default(now())
+
+  roomsCreated Room[]    @relation("RoomCreator")
+  bookings     Booking[]
+}
+
+model Room {
+  id          String   @id @default(cuid())
+  name        String
+  type        String
+  capacity    Int      @default(1)
+  pricePerNight Float
+  balance     Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  createdById String
+  createdBy   User   @relation("RoomCreator", fields: [createdById], references: [id])
+
+  bookings Booking[]
+}
+
+model Booking {
+  id        String       @id @default(cuid())
+  type      MovementType
+  nights    Int
+  date      DateTime     @default(now())
+  createdAt DateTime     @default(now())
+
+  roomId String
+  room   Room   @relation(fields: [roomId], references: [id])
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+}
