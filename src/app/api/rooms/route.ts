@@ -15,9 +15,10 @@ export async function GET() {
     });
     return NextResponse.json(rooms);
   } catch (error) {
+    console.error("[GET_ROOMS_ERROR]", error);
     return NextResponse.json(
       { error: "Error al obtener habitaciones" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -40,7 +41,7 @@ export async function POST(req: Request) {
     if (!name || !type || !pricePerNight) {
       return NextResponse.json(
         { error: "Faltan campos requeridos" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -62,9 +63,10 @@ export async function POST(req: Request) {
 
     return NextResponse.json(room, { status: 201 });
   } catch (error) {
+    console.error("[POST_ROOMS_ERROR]", error);
     return NextResponse.json(
       { error: "Error al crear habitación" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

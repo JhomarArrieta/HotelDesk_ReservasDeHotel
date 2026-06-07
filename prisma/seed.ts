@@ -5,8 +5,15 @@ import * as dotenv from "dotenv";
 
 dotenv.config();
 
+const directUrl = process.env.DIRECT_URL;
+if (!directUrl) {
+  throw new Error(
+    "Error: 'DIRECT_URL' no está definida en las variables de entorno.",
+  );
+}
+
 const adapter = new PrismaPg({
-  connectionString: process.env.DIRECT_URL!,
+  connectionString: directUrl,
 });
 
 const prisma = new PrismaClient({ adapter });

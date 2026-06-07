@@ -5,13 +5,14 @@ import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { LayoutDashboard, BookOpen, Users, LogOut, Hotel } from "lucide-react";
 import type { Role } from "@prisma/client";
+import Image from "next/image";
 
 interface SidebarProps {
-  user: {
-    name?: string | null;
-    email?: string | null;
-    image?: string | null;
-    role: Role;
+  readonly user: {
+    readonly name?: string | null;
+    readonly email?: string | null;
+    readonly image?: string | null;
+    readonly role: Role;
   };
 }
 
@@ -70,7 +71,7 @@ export default function Sidebar({ user }: SidebarProps) {
       <div className="px-6 py-5 border-b border-slate-800">
         <div className="flex items-center gap-3">
           {user.image ? (
-            <img
+            <Image
               src={user.image}
               alt={user.name ?? "Usuario"}
               className="w-10 h-10 rounded-full object-cover ring-2 ring-amber-400/30"

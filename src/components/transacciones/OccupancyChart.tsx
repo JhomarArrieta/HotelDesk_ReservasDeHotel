@@ -11,14 +11,14 @@ import {
 } from "recharts";
 
 interface Booking {
-  type: "ENTRADA" | "SALIDA";
-  nights: number;
-  date: string;
+  readonly type: "ENTRADA" | "SALIDA";
+  readonly nights: number;
+  readonly date: string;
 }
 
 interface OccupancyChartProps {
-  bookings: Booking[];
-  roomName: string;
+  readonly bookings: Booking[];
+  readonly roomName: string;
 }
 
 export default function OccupancyChart({

@@ -2,13 +2,14 @@ import Link from "next/link";
 
 export default function LandingPage() {
   return (
-    <main className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex flex-col items-center justify-center gap-6 p-8">
+    <main className="min-h-screen bg-linear-to-br from-slate-900 to-slate-800 flex flex-col items-center justify-center gap-6 p-8">
       <div className="text-center space-y-3">
         <h1 className="text-5xl font-bold text-white tracking-tight">
           Hotel<span className="text-amber-400">Desk</span>
         </h1>
         <p className="text-slate-400 text-lg max-w-md">
-          Sistema de administración interna para gestión de reservas y habitaciones
+          Sistema de administración interna para gestión de reservas y
+          habitaciones
         </p>
       </div>
 

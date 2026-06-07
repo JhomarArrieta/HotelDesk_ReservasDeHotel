@@ -10,7 +10,7 @@ export async function GET(req: Request) {
     if (!roomId) {
       return NextResponse.json(
         { error: "roomId es requerido" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -24,9 +24,11 @@ export async function GET(req: Request) {
 
     return NextResponse.json(bookings);
   } catch (error) {
+    console.error("[GET_BOOKINGS_ERROR]", error);
+
     return NextResponse.json(
       { error: "Error al obtener reservas" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -43,7 +45,7 @@ export async function POST(req: Request) {
     if (!roomId || !type) {
       return NextResponse.json(
         { error: "Faltan campos requeridos" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -51,7 +53,7 @@ export async function POST(req: Request) {
     if (!room) {
       return NextResponse.json(
         { error: "Habitación no encontrada" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -82,9 +84,11 @@ export async function POST(req: Request) {
 
     return NextResponse.json(booking, { status: 201 });
   } catch (error) {
+    console.error("[POST_BOOKINGS_ERROR]", error);
+
     return NextResponse.json(
       { error: "Error al crear reserva" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

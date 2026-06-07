@@ -4,9 +4,9 @@ import Sidebar from "../../components/sidebar/Sidebar";
 
 export default async function DashboardLayout({
   children,
-}: {
+}: Readonly<{
   children: React.ReactNode;
-}) {
+}>) {
   // Obtiene la sesión del servidor — si no hay sesión, redirige al login
   const session = await auth();
   if (!session) redirect("/login");

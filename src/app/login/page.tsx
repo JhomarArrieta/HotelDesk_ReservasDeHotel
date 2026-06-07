@@ -1,7 +1,7 @@
 "use client";
 
 import { signIn } from "next-auth/react";
-import { useState } from "react";
+import { useState, SyntheticEvent } from "react";
 import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
@@ -9,7 +9,7 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(e: SyntheticEvent<HTMLFormElement>) {
     e.preventDefault();
     setLoading(true);
     setError("");
@@ -33,21 +33,27 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center p-4">
+    <main className="min-h-screen bg-linear-to-br from-slate-900 to-slate-800 flex items-center justify-center p-4">
       <div className="w-full max-w-md bg-slate-800 border border-slate-700 rounded-2xl p-8 shadow-2xl">
         <div className="mb-8 text-center">
           <h1 className="text-3xl font-bold text-white">
             Hotel<span className="text-amber-400">Desk</span>
           </h1>
-          <p className="text-slate-400 mt-2 text-sm">Ingresa tus credenciales</p>
+          <p className="text-slate-400 mt-2 text-sm">
+            Ingresa tus credenciales
+          </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div className="space-y-1">
-            <label className="text-sm text-slate-300 font-medium">
+            <label
+              htmlFor="email-input"
+              className="text-sm text-slate-300 font-medium"
+            >
               Correo electrónico
             </label>
             <input
+              id="email-input"
               name="email"
               type="email"
               required
@@ -57,10 +63,14 @@ export default function LoginPage() {
           </div>
 
           <div className="space-y-1">
-            <label className="text-sm text-slate-300 font-medium">
+            <label
+              htmlFor="password-input"
+              className="text-sm text-slate-300 font-medium"
+            >
               Contraseña
             </label>
             <input
+              id="password-input"
               name="password"
               type="password"
               required

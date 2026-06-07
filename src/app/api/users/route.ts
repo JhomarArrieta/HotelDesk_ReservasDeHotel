@@ -28,9 +28,10 @@ export async function GET() {
 
     return NextResponse.json(users);
   } catch (error) {
+    console.error("[GET_USERS_ERROR]", error);
     return NextResponse.json(
       { error: "Error al obtener usuarios" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

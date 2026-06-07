@@ -1,24 +1,37 @@
 "use client";
 
 import { useState } from "react";
-import { X } from "lucide-react";
+import Button from "../ui/Button";
+import Input from "../ui/Input";
+import Select from "../ui/Select";
+import Modal from "../ui/Modal";
 
 interface AddRoomModalProps {
-  onClose: () => void;
-  onSuccess: () => void;
+  readonly onClose: () => void;
+  readonly onSuccess: () => void;
 }
 
-const ROOM_TYPES = ["Estándar", "Suite", "Doble", "Junior Suite", "Presidencial"];
+const ROOM_TYPES = [
+  "Estándar",
+  "Suite",
+  "Doble",
+  "Junior Suite",
+  "Presidencial",
+];
 
-export default function AddRoomModal({ onClose, onSuccess }: AddRoomModalProps) {
+export default function AddRoomModal({
+  onClose,
+  onSuccess,
+}: AddRoomModalProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
 
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
     e.preventDefault();
     setLoading(true);
     setError("");
+    setSuccess(false);
 
     const formData = new FormData(e.currentTarget);
 
@@ -53,126 +66,71 @@ export default function AddRoomModal({ onClose, onSuccess }: AddRoomModalProps) 
   }
 
   return (
-    // Overlay
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-md shadow-2xl">
+    <Modal title="Nueva habitación" onClose={onClose}>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <Input
+          label="Nombre"
+          name="name"
+          type="text"
+          required
+          placeholder="Ej: Habitación 101"
+        />
 
-        {/* Header del modal */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800">
-          <h2 className="text-white font-semibold">Nueva habitación</h2>
-          <button
-            onClick={onClose}
-            className="text-slate-400 hover:text-white transition-colors"
-          >
-            <X size={20} />
-          </button>
+        <Select
+          label="Tipo"
+          name="type"
+          options={ROOM_TYPES.map((t) => ({ value: t, label: t }))}
+        />
+
+        <div className="grid grid-cols-2 gap-4">
+          <Input
+            label="Capacidad (pax)"
+            name="capacity"
+            type="number"
+            min="1"
+            required
+            defaultValue={2}
+          />
+          <Input
+            label="Precio / noche"
+            name="pricePerNight"
+            type="number"
+            min="0"
+            required
+            placeholder="150000"
+          />
         </div>
 
-        {/* Formulario */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          <div className="space-y-1">
-            <label className="text-sm text-slate-300 font-medium">
-              Nombre
-            </label>
-            <input
-              name="name"
-              type="text"
-              required
-              placeholder="Ej: Habitación 101"
-              className="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-400 transition"
-            />
-          </div>
+        <Input
+          label="Saldo inicial (noches reservadas)"
+          name="balance"
+          type="number"
+          min="0"
+          required
+          defaultValue={0}
+        />
 
-          <div className="space-y-1">
-            <label className="text-sm text-slate-300 font-medium">
-              Tipo
-            </label>
-            <select
-              name="type"
-              required
-              className="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-amber-400 transition"
-            >
-              {ROOM_TYPES.map((type) => (
-                <option key={type} value={type}>{type}</option>
-              ))}
-            </select>
-          </div>
+        {error && (
+          <p className="text-red-400 text-sm bg-red-400/10 px-4 py-2 rounded-lg">
+            {error}
+          </p>
+        )}
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1">
-              <label className="text-sm text-slate-300 font-medium">
-                Capacidad (pax)
-              </label>
-              <input
-                name="capacity"
-                type="number"
-                min="1"
-                required
-                defaultValue={2}
-                className="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-amber-400 transition"
-              />
-            </div>
+        {success && (
+          <p className="text-green-400 text-sm bg-green-400/10 px-4 py-2 rounded-lg">
+            ✓ Habitación creada exitosamente
+          </p>
+        )}
 
-            <div className="space-y-1">
-              <label className="text-sm text-slate-300 font-medium">
-                Precio / noche
-              </label>
-              <input
-                name="pricePerNight"
-                type="number"
-                min="0"
-                required
-                placeholder="150000"
-                className="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-400 transition"
-              />
-            </div>
-          </div>
-
-          <div className="space-y-1">
-            <label className="text-sm text-slate-300 font-medium">
-              Saldo inicial (noches disponibles)
-            </label>
-            <input
-              name="balance"
-              type="number"
-              min="0"
-              required
-              defaultValue={0}
-              className="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-amber-400 transition"
-            />
-          </div>
-
-          {error && (
-            <p className="text-red-400 text-sm bg-red-400/10 px-4 py-2 rounded-lg">
-              {error}
-            </p>
-          )}
-
-          {success && (
-            <p className="text-green-400 text-sm bg-green-400/10 px-4 py-2 rounded-lg">
-              ✓ Habitación creada exitosamente
-            </p>
-          )}
-
-          {/* Botones */}
-          <div className="flex gap-3 pt-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 py-2.5 border border-slate-700 text-slate-300 hover:text-white hover:border-slate-600 rounded-xl transition-all text-sm font-medium"
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              disabled={loading || success}
-              className="flex-1 py-2.5 bg-amber-400 hover:bg-amber-300 disabled:opacity-50 disabled:cursor-not-allowed text-slate-900 font-semibold rounded-xl transition-all text-sm"
-            >
-              {loading ? "Creando..." : "Crear habitación"}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+        <div className="flex gap-3 pt-2">
+          <Button variant="secondary" type="button" onClick={onClose}>
+            Cancelar
+          </Button>
+          <Button type="submit" loading={loading} disabled={success}>
+            Crear habitación
+          </Button>
+        </div>
+      </form>
+    </Modal>
   );
 }

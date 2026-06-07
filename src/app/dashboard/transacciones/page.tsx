@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Plus, TrendingUp } from "lucide-react";
 import AddBookingModal from "../../../components/transacciones/AddBookingModal";
 import OccupancyChart from "../../../components/transacciones/OccupancyChart";
@@ -30,49 +30,146 @@ export default function TransaccionesPage() {
 
   // Carga habitaciones al montar
   useEffect(() => {
+    let isMounted = true;
     fetch("/api/rooms")
       .then((r) => r.json())
       .then((data) => {
+        if (!isMounted) return;
         setRooms(data);
         if (data.length > 0) setSelectedRoom(data[0]);
       })
-      .finally(() => setLoadingRooms(false));
+      .catch((err) => console.error("[FETCH_ROOMS_INIT_ERROR]", err))
+      .finally(() => {
+        if (isMounted) setLoadingRooms(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  // Memorizar la consulta de reservas
+  const fetchBookings = useCallback(async (roomId: string) => {
+    setLoadingBookings(true);
+    try {
+      const res = await fetch(`/api/bookings?roomId=${roomId}`);
+      const data = await res.json();
+      setBookings(data);
+    } catch (error) {
+      console.error("[FETCH_BOOKINGS_ERROR]", error);
+    } finally {
+      setLoadingBookings(false);
+    }
   }, []);
 
   // Carga bookings cuando cambia la habitación seleccionada
   useEffect(() => {
     if (!selectedRoom) return;
 
-    async function fetchBookings() {
-      setLoadingBookings(true);
-      try {
-        const res = await fetch(`/api/bookings?roomId=${selectedRoom!.id}`);
-        const data = await res.json();
-        setBookings(data);
-      } finally {
-        setLoadingBookings(false);
-      }
-    }
+    const executeFetch = setTimeout(() => {
+      fetchBookings(selectedRoom.id);
+    }, 0);
 
-    fetchBookings();
-  }, [selectedRoom]);
+    return () => clearTimeout(executeFetch);
+  }, [selectedRoom, fetchBookings]);
 
-  async function refreshData() {
+  const refreshData = useCallback(async () => {
     if (!selectedRoom) return;
 
-    // Refresca tanto los bookings como el saldo actualizado de la habitación
-    const [bookingsRes, roomsRes] = await Promise.all([
-      fetch(`/api/bookings?roomId=${selectedRoom.id}`).then((r) => r.json()),
-      fetch("/api/rooms").then((r) => r.json()),
-    ]);
+    try {
+      const [bookingsRes, roomsRes] = await Promise.all([
+        fetch(`/api/bookings?roomId=${selectedRoom.id}`).then((r) => r.json()),
+        fetch("/api/rooms").then((r) => r.json()),
+      ]);
 
-    setBookings(bookingsRes);
-    setRooms(roomsRes);
+      setBookings(bookingsRes);
+      setRooms(roomsRes);
 
-    // Actualiza el saldo mostrado en el dropdown
-    const updatedRoom = roomsRes.find((r: Room) => r.id === selectedRoom.id);
-    if (updatedRoom) setSelectedRoom(updatedRoom);
-  }
+      const updatedRoom = roomsRes.find((r: Room) => r.id === selectedRoom.id);
+      if (updatedRoom) setSelectedRoom(updatedRoom);
+    } catch (error) {
+      console.error("[REFRESH_DATA_ERROR]", error);
+    }
+  }, [selectedRoom]);
+
+  const renderTableContent = () => {
+    if (loadingBookings) {
+      return (
+        <div className="flex items-center justify-center py-16">
+          <div className="w-6 h-6 border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />
+        </div>
+      );
+    }
+
+    if (bookings.length === 0) {
+      return (
+        <div className="flex flex-col items-center justify-center py-16 gap-3">
+          <TrendingUp className="text-slate-600" size={40} />
+          <p className="text-slate-500">No hay movimientos registrados</p>
+        </div>
+      );
+    }
+
+    return (
+      <table className="w-full">
+        <thead>
+          <tr className="border-b border-slate-800">
+            <th className="text-left px-6 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">
+              ID
+            </th>
+            <th className="text-left px-6 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">
+              Fecha
+            </th>
+            <th className="text-left px-6 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">
+              Tipo
+            </th>
+            <th className="text-left px-6 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">
+              Noches
+            </th>
+            <th className="text-left px-6 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">
+              Registrado por
+            </th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-slate-800">
+          {bookings.map((booking) => (
+            <tr
+              key={booking.id}
+              className="hover:bg-slate-800/50 transition-colors"
+            >
+              <td className="px-6 py-4 text-xs text-slate-500 font-mono">
+                {booking.id.slice(0, 8)}...
+              </td>
+              <td className="px-6 py-4 text-slate-300 text-sm">
+                {new Date(booking.date).toLocaleDateString("es-CO", {
+                  year: "numeric",
+                  month: "short",
+                  day: "numeric",
+                })}
+              </td>
+              <td className="px-6 py-4">
+                <span
+                  className={`px-2.5 py-1 text-xs font-semibold rounded-lg ${
+                    booking.type === "ENTRADA"
+                      ? "bg-red-400/15 text-red-400"
+                      : "bg-green-400/15 text-green-400"
+                  }`}
+                >
+                  {booking.type === "ENTRADA" ? "Check-in" : "Check-out"}
+                </span>
+              </td>
+              <td className="px-6 py-4 text-white font-medium">
+                {booking.nights} {booking.nights === 1 ? "noche" : "noches"}
+              </td>
+              <td className="px-6 py-4 text-slate-400 text-sm">
+                {booking.user.name ?? booking.user.email}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    );
+  };
 
   return (
     <div className="space-y-6">
@@ -96,13 +193,17 @@ export default function TransaccionesPage() {
 
       {/* Dropdown selector de habitación */}
       <div className="flex items-center gap-4">
-        <label className="text-slate-400 text-sm font-medium whitespace-nowrap">
+        <label
+          htmlFor="room-select"
+          className="text-slate-400 text-sm font-medium whitespace-nowrap"
+        >
           Habitación:
         </label>
         {loadingRooms ? (
           <div className="w-6 h-6 border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />
         ) : (
           <select
+            id="room-select" // ✅ Vinculación de accesibilidad
             value={selectedRoom?.id ?? ""}
             onChange={(e) => {
               const room = rooms.find((r) => r.id === e.target.value);
@@ -126,75 +227,8 @@ export default function TransaccionesPage() {
             Movimientos{selectedRoom ? ` — ${selectedRoom.name}` : ""}
           </h2>
         </div>
-
-        {loadingBookings ? (
-          <div className="flex items-center justify-center py-16">
-            <div className="w-6 h-6 border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />
-          </div>
-        ) : bookings.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 gap-3">
-            <TrendingUp className="text-slate-600" size={40} />
-            <p className="text-slate-500">No hay movimientos registrados</p>
-          </div>
-        ) : (
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-slate-800">
-                <th className="text-left px-6 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                  ID
-                </th>
-                <th className="text-left px-6 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                  Fecha
-                </th>
-                <th className="text-left px-6 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                  Tipo
-                </th>
-                <th className="text-left px-6 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                  Noches
-                </th>
-                <th className="text-left px-6 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                  Registrado por
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-800">
-              {bookings.map((booking) => (
-                <tr
-                  key={booking.id}
-                  className="hover:bg-slate-800/50 transition-colors"
-                >
-                  <td className="px-6 py-4 text-xs text-slate-500 font-mono">
-                    {booking.id.slice(0, 8)}...
-                  </td>
-                  <td className="px-6 py-4 text-slate-300 text-sm">
-                    {new Date(booking.date).toLocaleDateString("es-CO", {
-                      year: "numeric",
-                      month: "short",
-                      day: "numeric",
-                    })}
-                  </td>
-                  <td className="px-6 py-4">
-                    <span
-                      className={`px-2.5 py-1 text-xs font-semibold rounded-lg ${
-                        booking.type === "ENTRADA"
-                          ? "bg-red-400/15 text-red-400"
-                          : "bg-green-400/15 text-green-400"
-                      }`}
-                    >
-                      {booking.type === "ENTRADA" ? "Check-in" : "Check-out"}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-white font-medium">
-                    {booking.nights} {booking.nights === 1 ? "noche" : "noches"}
-                  </td>
-                  <td className="px-6 py-4 text-slate-400 text-sm">
-                    {booking.user.name ?? booking.user.email}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+        {/* Renderizado condicional limpio sin ternarios anidados */}
+        {renderTableContent()}
       </div>
 
       {/* Gráfica de ocupación */}

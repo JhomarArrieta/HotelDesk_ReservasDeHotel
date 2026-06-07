@@ -47,6 +47,7 @@ export async function PATCH(
 
     return NextResponse.json(user);
   } catch (error) {
+    console.error("[PATCH_USER_ROLE_ERROR]", error);
     return NextResponse.json(
       { error: "Error al actualizar usuario" },
       { status: 500 }
