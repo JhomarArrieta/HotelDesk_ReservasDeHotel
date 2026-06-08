@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { LayoutDashboard, BookOpen, Users, LogOut, Hotel } from "lucide-react";
-import type { Role } from "@prisma/client";
+type Role = "ADMIN" | "USER";
 import Image from "next/image";
 
 interface SidebarProps {
