@@ -1,6 +1,6 @@
-import type { Role } from "@prisma/client";
+import type { Role } from "../generated/prisma";
 
-// Extiende los tipos de NextAuth para incluir role
+// Extiende los tipos de NextAuth en un solo bloque integrado
 declare module "next-auth" {
   interface Session {
     user: {
@@ -8,7 +8,17 @@ declare module "next-auth" {
       name?: string | null;
       email?: string | null;
       image?: string | null;
-      role: "ADMIN" | "USER";
+      role: Role;
     };
+  }
+
+  interface User {
+    id: string;
+    role: Role;
+  }
+
+  interface JWT {
+    id: string;
+    role: Role;
   }
 }
