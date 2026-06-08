@@ -1,12 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
-import type { Prisma } from "@prisma/client";
 
-// Tipo correcto para el cliente dentro de una transacción en Prisma 7
-type TransactionClient = Prisma.TransactionClient;
-
-// GET /api/bookings?roomId=xxx — obtiene los movimientos de una habitación
+// GET /api/bookings?roomId=xxx
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
@@ -37,7 +33,7 @@ export async function GET(req: Request) {
   }
 }
 
-// POST /api/bookings — crea un movimiento y actualiza el saldo
+// POST /api/bookings
 export async function POST(req: Request) {
   try {
     const session = await auth();
@@ -62,7 +58,9 @@ export async function POST(req: Request) {
       );
     }
 
-    const booking = await prisma.$transaction(async (tx: TransactionClient) => {
+    // Crea el booking
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const booking = await prisma.$transaction(async (tx: any) => {
       const newBooking = await tx.booking.create({
         data: {
           roomId,
@@ -75,7 +73,6 @@ export async function POST(req: Request) {
         },
       });
 
-      // Solo el check-in afecta el saldo
       if (type === "ENTRADA") {
         await tx.room.update({
           where: { id: roomId },
@@ -85,8 +82,6 @@ export async function POST(req: Request) {
 
       return newBooking;
     });
-
-    return NextResponse.json(booking, { status: 201 });
   } catch (error) {
     console.error("[POST_BOOKING_ERROR]", error);
     return NextResponse.json(
