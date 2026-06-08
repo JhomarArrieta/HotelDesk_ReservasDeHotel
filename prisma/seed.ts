@@ -1,19 +1,12 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from "@prisma/client/edge";
 import { PrismaPg } from "@prisma/adapter-pg";
 import bcrypt from "bcryptjs";
 import * as dotenv from "dotenv";
 
 dotenv.config();
 
-const directUrl = process.env.DIRECT_URL;
-if (!directUrl) {
-  throw new Error(
-    "Error: 'DIRECT_URL' no está definida en las variables de entorno.",
-  );
-}
-
 const adapter = new PrismaPg({
-  connectionString: directUrl,
+  connectionString: process.env.DIRECT_URL!,
 });
 
 const prisma = new PrismaClient({ adapter });
