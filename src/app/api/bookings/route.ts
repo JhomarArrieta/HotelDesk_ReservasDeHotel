@@ -1,7 +1,12 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
+import type { Prisma } from "@prisma/client";
 
+// Tipo correcto para el cliente dentro de una transacción en Prisma 7
+type TransactionClient = Prisma.TransactionClient;
+
+// GET /api/bookings?roomId=xxx — obtiene los movimientos de una habitación
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
@@ -25,7 +30,6 @@ export async function GET(req: Request) {
     return NextResponse.json(bookings);
   } catch (error) {
     console.error("[GET_BOOKINGS_ERROR]", error);
-
     return NextResponse.json(
       { error: "Error al obtener reservas" },
       { status: 500 },
@@ -33,6 +37,7 @@ export async function GET(req: Request) {
   }
 }
 
+// POST /api/bookings — crea un movimiento y actualiza el saldo
 export async function POST(req: Request) {
   try {
     const session = await auth();
@@ -57,13 +62,12 @@ export async function POST(req: Request) {
       );
     }
 
-    const booking = await prisma.$transaction(async (tx) => {
+    const booking = await prisma.$transaction(async (tx: TransactionClient) => {
       const newBooking = await tx.booking.create({
         data: {
           roomId,
           userId: session.user.id,
           type,
-          // Solo guarda noches si es check-in
           nights: type === "ENTRADA" ? Number(nights) : 0,
         },
         include: {
@@ -71,7 +75,7 @@ export async function POST(req: Request) {
         },
       });
 
-      // Solo el check-in afecta el saldo (noches ocupadas acumuladas)
+      // Solo el check-in afecta el saldo
       if (type === "ENTRADA") {
         await tx.room.update({
           where: { id: roomId },
@@ -84,8 +88,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json(booking, { status: 201 });
   } catch (error) {
-    console.error("[POST_BOOKINGS_ERROR]", error);
-
+    console.error("[POST_BOOKING_ERROR]", error);
     return NextResponse.json(
       { error: "Error al crear reserva" },
       { status: 500 },
