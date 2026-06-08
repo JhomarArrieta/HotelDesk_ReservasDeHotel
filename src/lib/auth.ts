@@ -7,13 +7,13 @@ import { prisma } from "@/lib/prisma";
 type Role = "ADMIN" | "USER";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
-  adapter: PrismaAdapter(prisma),
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  adapter: PrismaAdapter(prisma as any),
   session: { strategy: "jwt" },
   pages: {
     signIn: "/login",
   },
   callbacks: {
-    // Agrega role e id al token JWT cuando el usuario inicia sesión
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
@@ -21,7 +21,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       }
       return token;
     },
-    // Expone role e id en la sesión accesible desde el cliente
     async session({ session, token }) {
       if (token) {
         session.user.id = token.id as string;
